@@ -601,3 +601,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+### Project-specific
+# PyCharm IDE config
+.idea/
+
+# ODSRL23 is a clone of an upstream reference repo (KPEKEP/ODSRL23), not our work
+/ODSRL23/
+
