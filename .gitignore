@@ -608,3 +608,6 @@ cython_debug/
 # ODSRL23 is a clone of an upstream reference repo (KPEKEP/ODSRL23), not our work
 /ODSRL23/
 
+
+# Playwright MCP scratch
+.playwright-mcp/
