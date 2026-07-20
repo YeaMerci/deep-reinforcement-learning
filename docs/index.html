@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Deep Reinforcement Learning · ODS.ai 2023 — Coursework</title>
+<meta name="description" content="Deep Reinforcement Learning coursework (Open Data Science, 2023): CEM, Dynamic Programming, DQN, PPO & SAC from scratch in PyTorch — by Anton Plaksin's course. Certificate, structure, formulas, results." />
+
+<!-- Open Graph / social -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Deep Reinforcement Learning — Coursework & Certificate" />
+<meta property="og:description" content="From the Cross-Entropy Method to Soft Actor-Critic. Open Data Science, 2023. CEM · DQN · PPO · SAC in PyTorch." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=JetBrains+Mono:wght@400;500;700&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+:root{
+  --ink:#070a10;
+  --ink-2:#0b1018;
+  --panel:#0e1521;
+  --panel-2:#111a28;
+  --line:#1e2b3d;
+  --fog:#8ba0b8;
+  --text:#e7eef6;
+  --mint:#6ffcc0;
+  --mint-dim:#3ad9a0;
+  --amber:#ffb454;
+  --violet:#b79cff;
+  --cyan:#6fe8ff;
+  --danger:#ff7a7a;
+  --glow: 0 0 40px rgba(111,252,192,.18);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--ink); color:var(--text);
+  font-family:"Spline Sans",system-ui,sans-serif; line-height:1.6;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+/* ambient background: value-function grid + radial glow + grain */
+body::before{
+  content:""; position:fixed; inset:0; z-index:-2;
+  background:
+    radial-gradient(1100px 620px at 78% -8%, rgba(111,252,192,.10), transparent 60%),
+    radial-gradient(900px 520px at 8% 12%, rgba(183,156,255,.08), transparent 62%),
+    linear-gradient(180deg,#070a10, #05070c 60%, #070a10);
+}
+body::after{
+  content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.5;
+  background-image:
+    linear-gradient(rgba(30,43,61,.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30,43,61,.35) 1px, transparent 1px);
+  background-size:46px 46px;
+  mask-image:radial-gradient(circle at 50% 30%, #000 0%, transparent 78%);
+}
+.wrap{max-width:1080px; margin:0 auto; padding:0 26px}
+a{color:var(--mint); text-decoration:none}
+a:hover{color:#fff}
+
+/* ── mono eyebrow labels ── */
+.mono{font-family:"JetBrains Mono",monospace; letter-spacing:.06em}
+.eyebrow{
+  font-family:"JetBrains Mono",monospace; font-size:12.5px; letter-spacing:.28em;
+  text-transform:uppercase; color:var(--mint-dim);
+}
+
+/* ── top bar ── */
+header.bar{
+  position:sticky; top:0; z-index:50; backdrop-filter:blur(10px);
+  background:rgba(7,10,16,.6); border-bottom:1px solid var(--line);
+}
+.bar .wrap{display:flex; align-items:center; justify-content:space-between; height:58px}
+.brand{font-family:"JetBrains Mono",monospace; font-weight:700; font-size:14px; letter-spacing:.02em}
+.brand b{color:var(--mint)}
+.bar nav{display:flex; gap:22px}
+.bar nav a{color:var(--fog); font-family:"JetBrains Mono",monospace; font-size:12.5px}
+.bar nav a:hover{color:var(--text)}
+@media(max-width:720px){ .bar nav{display:none} }
+
+/* ── hero ── */
+.hero{padding:96px 0 40px; position:relative}
+.hero .eyebrow{opacity:0; animation:rise .8s .05s forwards}
+h1.title{
+  font-family:"Fraunces",serif; font-weight:900; font-size:clamp(46px,8.4vw,104px);
+  line-height:.96; letter-spacing:-.02em; margin:16px 0 8px;
+  opacity:0; animation:rise .9s .12s forwards;
+}
+h1.title .it{font-style:italic; font-weight:500; color:var(--mint)}
+.sub{
+  font-size:clamp(16px,2.2vw,21px); color:var(--fog); max-width:640px;
+  opacity:0; animation:rise .9s .2s forwards;
+}
+.sub b{color:var(--text)}
+.badges{display:flex; flex-wrap:wrap; gap:10px; margin-top:26px; opacity:0; animation:rise .9s .3s forwards}
+.chip{
+  font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.02em;
+  padding:7px 13px; border:1px solid var(--line); border-radius:999px;
+  background:var(--panel); color:var(--fog); white-space:nowrap;
+}
+.chip.hot{border-color:rgba(111,252,192,.4); color:var(--mint); box-shadow:var(--glow)}
+.chip.gold{border-color:rgba(255,180,84,.45); color:var(--amber)}
+.cta-row{display:flex; flex-wrap:wrap; gap:14px; margin-top:34px; opacity:0; animation:rise .9s .4s forwards}
+.btn{
+  font-family:"JetBrains Mono",monospace; font-weight:700; font-size:13.5px;
+  padding:14px 22px; border-radius:12px; display:inline-flex; align-items:center; gap:10px;
+  transition:transform .15s ease, box-shadow .2s ease;
+}
+.btn.primary{background:linear-gradient(180deg,#7dffca,#37c795); color:#04110b; box-shadow:var(--glow)}
+.btn.primary:hover{transform:translateY(-2px); color:#04110b}
+.btn.ghost{border:1px solid var(--line); color:var(--text); background:var(--panel)}
+.btn.ghost:hover{border-color:var(--mint); transform:translateY(-2px)}
+
+/* ── section scaffolding ── */
+section{padding:64px 0; border-top:1px solid var(--line)}
+.sec-head{display:flex; align-items:baseline; gap:16px; margin-bottom:30px; flex-wrap:wrap}
+.sec-head h2{
+  font-family:"Fraunces",serif; font-weight:600; font-size:clamp(26px,4vw,40px);
+  letter-spacing:-.01em; margin:0;
+}
+.sec-head .num{font-family:"JetBrains Mono",monospace; color:var(--mint-dim); font-size:14px}
+.lead{color:var(--fog); max-width:720px; margin:-14px 0 26px}
+
+/* ── certificate card ── */
+.cert{
+  position:relative; border:1px solid var(--line); border-radius:20px; overflow:hidden;
+  background:
+    linear-gradient(180deg, rgba(111,252,192,.05), transparent 30%),
+    var(--panel);
+  padding:38px 34px;
+}
+.cert::before{
+  content:""; position:absolute; inset:0; padding:1px; border-radius:20px; pointer-events:none;
+  background:linear-gradient(140deg, rgba(111,252,192,.5), transparent 30%, transparent 70%, rgba(183,156,255,.4));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+}
+.cert .seal{font-family:"JetBrains Mono",monospace; color:var(--mint); font-size:13px; letter-spacing:.2em}
+.cert h3{font-family:"Fraunces",serif; font-weight:900; font-size:clamp(26px,4.4vw,42px); margin:8px 0 4px}
+.cert p{color:var(--fog); max-width:760px}
+.cert .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 30px; margin-top:26px}
+@media(max-width:640px){ .cert .grid{grid-template-columns:1fr} }
+.cert .row{display:flex; flex-direction:column; gap:2px; padding:12px 0; border-top:1px solid var(--line)}
+.cert .row .k{font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--mint-dim)}
+.cert .row .v{color:var(--text); font-size:15px}
+.cert .distinction{
+  margin-top:24px; padding:16px 18px; border-radius:14px; border:1px solid rgba(255,180,84,.35);
+  background:rgba(255,180,84,.06); color:#ffe6c2; font-size:15px;
+}
+.cert .distinction b{color:var(--amber)}
+
+/* ── mermaid frame ── */
+.diagram-frame{
+  border:1px solid var(--line); border-radius:18px; background:var(--ink-2);
+  padding:22px; overflow-x:auto;
+}
+.diagram-frame pre.mermaid{margin:0; text-align:center; min-width:640px}
+.legend{display:flex; gap:18px; flex-wrap:wrap; margin-top:18px; font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--fog)}
+.legend span{display:inline-flex; align-items:center; gap:8px}
+.dot{width:11px; height:11px; border-radius:3px; display:inline-block}
+
+/* ── formula cards ── */
+.formulas{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px}
+@media(max-width:760px){ .formulas{grid-template-columns:1fr} }
+.fcard{
+  border:1px solid var(--line); border-radius:16px; background:var(--panel);
+  padding:20px 22px; transition:border-color .2s ease, transform .2s ease;
+}
+.fcard:hover{border-color:rgba(111,252,192,.4); transform:translateY(-3px)}
+.fcard h4{margin:0 0 6px; font-family:"JetBrains Mono",monospace; font-size:13px; color:var(--mint); letter-spacing:.02em}
+.fcard .tag{font-size:12px; color:var(--fog)}
+.fcard .math{margin-top:14px; overflow-x:auto; color:#eaf3ff}
+
+/* ── results table ── */
+.tbl{width:100%; border-collapse:collapse; font-size:14.5px; border:1px solid var(--line); border-radius:14px; overflow:hidden}
+.tbl th,.tbl td{padding:13px 16px; text-align:left; border-bottom:1px solid var(--line)}
+.tbl thead th{font-family:"JetBrains Mono",monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--mint-dim); background:var(--panel-2)}
+.tbl tbody tr:hover{background:rgba(111,252,192,.04)}
+.tbl code{font-family:"JetBrains Mono",monospace; color:var(--cyan); font-size:13px}
+.tbl .win{color:var(--mint); font-weight:600}
+.solved{color:var(--mint); font-family:"JetBrains Mono",monospace; font-size:12px}
+
+/* ── stack chips ── */
+.stack{display:flex; flex-wrap:wrap; gap:12px}
+.tech{
+  font-family:"JetBrains Mono",monospace; font-size:13px; font-weight:500;
+  padding:10px 16px; border-radius:10px; border:1px solid var(--line); background:var(--panel);
+  display:inline-flex; align-items:center; gap:9px; transition:transform .15s ease;
+}
+.tech:hover{transform:translateY(-3px)}
+.tech .sw{width:9px; height:9px; border-radius:50%}
+
+/* ── footer ── */
+footer{padding:70px 0 60px; border-top:1px solid var(--line); text-align:center}
+footer .big{font-family:"Fraunces",serif; font-style:italic; font-weight:500; font-size:clamp(22px,3.6vw,34px); margin-bottom:8px}
+footer .meta{font-family:"JetBrains Mono",monospace; font-size:12.5px; color:var(--fog); letter-spacing:.04em}
+
+@keyframes rise{from{opacity:0; transform:translateY(18px)} to{opacity:1; transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <div class="brand">deep<b>·</b>RL</div>
+    <nav>
+      <a href="#certificate">Certificate</a>
+      <a href="#structure">Structure</a>
+      <a href="#math">Formulas</a>
+      <a href="#results">Results</a>
+      <a href="https://github.com/YeaMerci/deep-reinforcement-learning">Repository ↗</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ══════════════════ HERO ══════════════════ -->
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Open Data Science · ODSRL23 · Anton Plaksin</div>
+    <h1 class="title">Deep Reinforcement<br/><span class="it">Learning.</span></h1>
+    <p class="sub"><b>From the Cross-Entropy Method to Soft Actor-Critic.</b> A complete, hands-on
+    passage through model-free and model-based Deep RL — tabular control, value-function
+    approximation, and modern actor-critic policy gradients, implemented from scratch in PyTorch.</p>
+    <div class="badges">
+      <span class="chip">8 Lectures</span>
+      <span class="chip">7 Practicals</span>
+      <span class="chip">11 Homeworks</span>
+      <span class="chip hot">Completed with Distinction</span>
+      <span class="chip gold">Invited Teaching Assistant · Cohort II</span>
+    </div>
+    <div class="cta-row">
+      <a class="btn primary" href="https://github.com/YeaMerci/deep-reinforcement-learning">View the Repository →</a>
+      <a class="btn ghost" href="#structure">Explore the Curriculum</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ CERTIFICATE ══════════════════ -->
+<section id="certificate">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">01</span><h2>Certificate of Completion</h2></div>
+    <div class="cert">
+      <div class="seal">📜 &nbsp;OPEN DATA SCIENCE · DEEP REINFORCEMENT LEARNING PROGRAM</div>
+      <h3>Deep Reinforcement Learning</h3>
+      <p>Successfully completed the intensive graduate-level program — 8 theoretical lectures,
+      7 guided practical sessions and 11 graded homework assignments — designing, implementing
+      and training reinforcement-learning agents from first principles.</p>
+      <div class="grid">
+        <div class="row"><span class="k">Program</span><span class="v">Deep Reinforcement Learning</span></div>
+        <div class="row"><span class="k">Institution</span><span class="v">Open Data Science · ods.ai</span></div>
+        <div class="row"><span class="k">Lecturer</span><span class="v">Anton Plaksin — Yandex Research · Ural Federal University · IMM UB RAS</span></div>
+        <div class="row"><span class="k">Cohort</span><span class="v">2023 · ODSRL23</span></div>
+        <div class="row"><span class="k">Scope</span><span class="v">8 Lectures · 7 Practicals · 11 Homeworks</span></div>
+        <div class="row"><span class="k">Distinction</span><span class="v">Invited as Teaching Assistant, Cohort II</span></div>
+      </div>
+      <div class="distinction">🏅 &nbsp;Upon completion, the author was <b>invited to join the teaching
+      staff of the second cohort</b> as a Teaching Assistant — mentoring new students and reviewing
+      their reinforcement-learning implementations.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ STRUCTURE ══════════════════ -->
+<section id="structure">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">02</span><h2>Course Structure</h2></div>
+    <p class="lead">Eight thematic milestones. Each block branches into its three pillars —
+    <span style="color:var(--cyan)">Lesson</span> (theory),
+    <span style="color:var(--mint)">Practice</span> (guided lab), and
+    <span style="color:var(--amber)">Homework</span> (independent implementation + results).</p>
+    <div class="diagram-frame">
+<pre class="mermaid">
+flowchart TB
+    classDef lesson    fill:#12263f,stroke:#6fe8ff,stroke-width:1.5px,color:#dff6ff;
+    classDef practice  fill:#0f2c22,stroke:#6ffcc0,stroke-width:1.5px,color:#d9ffef;
+    classDef homework  fill:#301f0f,stroke:#ffb454,stroke-width:1.5px,color:#ffe9cc;
+
+    subgraph M1["I · Cross-Entropy Method"]
+        direction LR
+        L1["Lecture 1<br/>Intro to RL · MDP<br/>Cross-Entropy Method"]:::lesson
+        P1["Practice 1<br/>Tabular CEM<br/>elite selection"]:::practice
+        H1["Homework 1<br/>CEM on Taxi-v3<br/>reward ~ 7.15"]:::homework
+    end
+    subgraph M2["II · Deep Cross-Entropy"]
+        direction LR
+        L2["Lecture 2<br/>Neural Nets<br/>Deep CEM"]:::lesson
+        P2["Practice 2<br/>Neural policy<br/>Deep CEM"]:::practice
+        H2["Homework 2<br/>Deep CEM · LunarLander<br/>reward ~ 148.9"]:::homework
+    end
+    subgraph M3["III · Dynamic Programming"]
+        direction LR
+        L3["Lecture 3<br/>Policy and Value<br/>Iteration · Bellman"]:::lesson
+        P3["Practice 3<br/>Frozen Lake<br/>DP planning"]:::practice
+        H3["Homework 3<br/>Policy Iteration<br/>gamma study"]:::homework
+    end
+    subgraph M4["IV · Model-Free Control"]
+        direction LR
+        L4["Lecture 4<br/>Monte-Carlo · SARSA<br/>Q-Learning"]:::lesson
+        P4["Practice 4<br/>epsilon-greedy<br/>TD control"]:::practice
+        H4["Homework 4.1 + 4.2<br/>Q-Learning vs MC/SARSA/CEM<br/>discretized control"]:::homework
+    end
+    subgraph M5["V · Value Function Approximation"]
+        direction LR
+        L5["Lecture 5<br/>DQN · replay<br/>target networks"]:::lesson
+        P5["Practice 5<br/>Deep Q-Network"]:::practice
+        H5["Homework 5.1 + 5.2<br/>DQN ~253 · Double DQN ~305<br/>W and B sweeps"]:::homework
+    end
+    subgraph M6["VI · Policy Gradient · On-Policy"]
+        direction LR
+        L6["Lecture 6<br/>Policy Gradient<br/>Actor-Critic · PPO · GAE"]:::lesson
+        P6["Practice 6<br/>PPO"]:::practice
+        H6["Homework 6.1/6.2/6.3<br/>PPO · Pendulum,<br/>LunarLander, Acrobot"]:::homework
+    end
+    subgraph M7["VII · Policy Gradient · Off-Policy"]
+        direction LR
+        L7["Lecture 7<br/>DDPG · TD3 · SAC<br/>entropy regularization"]:::lesson
+        P7["Practice 7<br/>Soft Actor-Critic"]:::practice
+        H7["Homework 7<br/>SAC · LunarLander<br/>reward ~ 204"]:::homework
+    end
+    subgraph M8["VIII · Exploration · Bandits"]
+        direction LR
+        L8["Lecture 8<br/>Multi-Armed Bandits<br/>UCB · Thompson Sampling"]:::lesson
+        P8["Capstone Theory<br/>regret analysis"]:::practice
+    end
+
+    M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7 --> M8
+</pre>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:#6fe8ff"></i> Lesson</span>
+      <span><i class="dot" style="background:#6ffcc0"></i> Practice</span>
+      <span><i class="dot" style="background:#ffb454"></i> Homework</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ FORMULAS ══════════════════ -->
+<section id="math">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">03</span><h2>Mathematical Arsenal</h2></div>
+    <p class="lead">The formal machinery implemented across the course — from Bellman optimality
+    to the clipped policy-gradient surrogate and maximum-entropy RL.</p>
+    <div class="formulas">
+      <div class="fcard">
+        <h4>Objective</h4><span class="tag">expected discounted return</span>
+        <div class="math">$$J(\pi_\theta)=\mathbb{E}_{\tau\sim\pi_\theta}\!\left[\sum_{t=0}^{\infty}\gamma^{t}R_t\right]$$</div>
+      </div>
+      <div class="fcard">
+        <h4>Bellman Optimality</h4><span class="tag">dynamic programming</span>
+        <div class="math">$$Q^{*}(s,a)=\mathbb{E}\!\Big[R_{t+1}+\gamma\max_{a'}Q^{*}(S_{t+1},a')\Big]$$</div>
+      </div>
+      <div class="fcard">
+        <h4>Q-Learning</h4><span class="tag">off-policy TD control</span>
+        <div class="math">$$Q(s,a)\leftarrow Q(s,a)+\alpha\big[r+\gamma\max_{a'}Q(s',a')-Q(s,a)\big]$$</div>
+      </div>
+      <div class="fcard">
+        <h4>DQN Loss</h4><span class="tag">value function approximation</span>
+        <div class="math">$$\mathcal{L}(\theta)=\mathbb{E}\Big[\big(r+\gamma\max_{a'}Q_{\bar\theta}(s',a')-Q_\theta(s,a)\big)^{2}\Big]$$</div>
+      </div>
+      <div class="fcard">
+        <h4>PPO · Clipped Surrogate</h4><span class="tag">on-policy actor-critic</span>
+        <div class="math">$$L^{\text{CLIP}}=\mathbb{E}_t\!\Big[\min\big(r_t\hat{A}_t,\;\text{clip}(r_t,1-\epsilon,1+\epsilon)\hat{A}_t\big)\Big]$$</div>
+      </div>
+      <div class="fcard">
+        <h4>Soft Actor-Critic</h4><span class="tag">maximum-entropy RL</span>
+        <div class="math">$$J(\pi)=\sum_t\mathbb{E}\Big[r(s_t,a_t)+\alpha\,\mathcal{H}\big(\pi(\cdot\mid s_t)\big)\Big]$$</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ RESULTS ══════════════════ -->
+<section id="results">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">04</span><h2>Headline Results</h2></div>
+    <p class="lead">Best-checkpoint mean returns from the submitted notebooks. “Solved” follows the
+    classic OpenAI Gym convention — mean reward over 100 consecutive episodes.</p>
+    <table class="tbl">
+      <thead><tr><th>Milestone</th><th>Algorithm</th><th>Environment</th><th>Solved @</th><th>Achieved</th></tr></thead>
+      <tbody>
+        <tr><td>I</td><td>Cross-Entropy Method</td><td><code>Taxi-v3</code></td><td>≈ 7.9 (opt.)</td><td class="win">≈ 7.15</td></tr>
+        <tr><td>II</td><td>Deep Cross-Entropy</td><td><code>LunarLander-v2</code></td><td>200</td><td>≈ 148.9</td></tr>
+        <tr><td>V</td><td>Deep Q-Network</td><td><code>LunarLander-v2</code></td><td>200</td><td class="win">≈ 253 <span class="solved">✓ solved</span></td></tr>
+        <tr><td>V</td><td>Double DQN</td><td><code>LunarLander-v2</code></td><td>200</td><td class="win">≈ 305 <span class="solved">✓ solved</span></td></tr>
+        <tr><td>VII</td><td>Soft Actor-Critic</td><td><code>LunarLander-v2</code></td><td>200</td><td class="win">≈ 204 <span class="solved">✓ solved</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════════ STACK ══════════════════ -->
+<section id="stack">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">05</span><h2>Technology Stack</h2></div>
+    <div class="stack">
+      <span class="tech"><i class="sw" style="background:#3776AB"></i>Python</span>
+      <span class="tech"><i class="sw" style="background:#EE4C2C"></i>PyTorch</span>
+      <span class="tech"><i class="sw" style="background:#4DABCF"></i>NumPy</span>
+      <span class="tech"><i class="sw" style="background:#0081A5"></i>OpenAI Gym</span>
+      <span class="tech"><i class="sw" style="background:#4B8BBE"></i>Box2D</span>
+      <span class="tech"><i class="sw" style="background:#FFBE00"></i>Weights &amp; Biases</span>
+      <span class="tech"><i class="sw" style="background:#11557C"></i>Matplotlib</span>
+      <span class="tech"><i class="sw" style="background:#150458"></i>pandas</span>
+      <span class="tech"><i class="sw" style="background:#8CAAE6"></i>SciPy</span>
+      <span class="tech"><i class="sw" style="background:#F37626"></i>Jupyter</span>
+      <span class="tech"><i class="sw" style="background:#2C6E9B"></i>Joblib</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="big">From the Cross-Entropy Method to Soft Actor-Critic.</div>
+    <div class="meta">Deep Reinforcement Learning · Open Data Science · 2023 &nbsp;·&nbsp;
+      <a href="https://github.com/YeaMerci/deep-reinforcement-learning">github.com/YeaMerci/deep-reinforcement-learning</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Mermaid (dark, mint accents) -->
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad:true,
+    theme:'base',
+    themeVariables:{
+      fontFamily:'JetBrains Mono, monospace',
+      fontSize:'13px',
+      primaryColor:'#0e1521',
+      primaryTextColor:'#e7eef6',
+      primaryBorderColor:'#1e2b3d',
+      lineColor:'#3ad9a0',
+      clusterBkg:'#0b1018',
+      clusterBorder:'#26364c',
+      titleColor:'#6ffcc0'
+    },
+    flowchart:{ curve:'basis', padding:14 }
+  });
+</script>
+
+<!-- MathJax -->
+<script>
+  window.MathJax = { tex:{ inlineMath:[['$','$']], displayMath:[['$$','$$']] }, svg:{ fontCache:'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+</body>
+</html>
